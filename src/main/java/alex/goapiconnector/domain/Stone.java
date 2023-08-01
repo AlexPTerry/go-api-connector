@@ -1,3 +1,5 @@
+package alex.goapiconnector.domain;
+
 public class Stone {
     private char colour;
     private int x;

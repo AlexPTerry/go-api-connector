@@ -1,3 +1,7 @@
+package alex.goapiconnector.domain;
+
+import java.util.Arrays;
+
 public class Board {
     private int[][] boardState;
     private int blackCaptures;
