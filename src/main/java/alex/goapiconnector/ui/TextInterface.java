@@ -6,33 +6,58 @@ import alex.goapiconnector.logic.GameController;
 
 public class TextInterface {
     
-    private GameController control;
+    private GameController gameController;
     private Scanner scan;
 
-    public TextInterface(GameController control) {
-        this.control = control;
-        this.scan = new Scanner(System.in);
+    public TextInterface(GameController gameController) {
+        this.gameController = gameController;
+        scan = new Scanner(System.in);
+    }
+
+    public void displayBoard() {
+        System.out.println(gameController.getBoard());
+    }
+
+    public void displayGameResult() {
+        // Compute result!
+        System.out.println("Result: N/A!!!");
+        System.out.println(gameController.getBoard());
     }
 
     public int[] requestMove() {
-        try {
-            System.out.print("Enter move in the form x, y: ");
-            String move = scan.nextLine();
-            String[] coordinates = move.split(", ");
+        while (true) {
+            try {
+                System.out.print("Enter move in the form x, y: ");
+                String move = scan.nextLine();
 
-            int x = Integer.parseInt(coordinates[0]);
-            int y = Integer.parseInt(coordinates[1]);
+                if (move.equals("pass")) {
+                    return new int[0];
+                }
 
-            if (control.isValidMove(x, y)) {
-                return new int[] {x, y};
+                String[] coordinates = move.split(", ");
+
+                if (coordinates.length != 2) {
+                    System.out.println("Please enter exactly two coordinates");
+                    continue;
+                }
+
+                int x = Integer.parseInt(coordinates[0]);
+                int y = Integer.parseInt(coordinates[1]);
+
+                if (gameController.isValidMove(x, y)) {
+                    return new int[] {x-1, y-1};
+                } else {
+                    System.out.println("Coordinates must be between " 
+                                        + gameController.getMIN_COORDINATE() 
+                                        + " and " 
+                                        + gameController.getMAX_COORDINATE());
+                    continue;
+                }
+
+            } catch (Exception e) {
+                System.out.println("Please enter a move in the form: x, y");
             }
-
-
-        } catch (Exception e) {
-            System.out.println("Please enter a move in the form: x, y");
         }
-
-        return new int[0];
     }
 
 }

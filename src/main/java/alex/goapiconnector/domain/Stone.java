@@ -2,25 +2,18 @@ package alex.goapiconnector.domain;
 
 public class Stone {
     private char colour;
-    private int x;
-    private int y;
+    private int[] move;
 
-    public Stone(char colour, int x, int y) {
+    public Stone(char colour, int[] move) {
         this.colour = colour;
-        this.x = x;
-        this.y = y;
+        this.move = move;
     }
     
     public int getColour() {
         return this.colour;
     }
 
-    public int getX() {
-        return this.x;
+    public int[] getMove() {
+        return this.move;
     }
-    
-    public int getY() {
-        return this.y;
-    }
-    
 }
