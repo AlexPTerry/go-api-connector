@@ -17,9 +17,9 @@ public class Board {
         this.whiteCaptures = 0;
 
         MOVE_CONVERSION = ImmutableMap.of(
-            0, '+',
+            0, '·',
             1, '●',
-            2, '⚬'
+            2, '○'
         );
     }
 
