@@ -13,14 +13,15 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import alex.goapiconnector.domain.GameState;
+
 public class MyHandler extends TextWebSocketHandler {
 
     private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
     private final Queue<WebSocketSession> playerQueue = new LinkedList<>();
 
     private final Map<String, String> sessionToGameId = new HashMap<>();
-
-    private WebSocketSession playerWaiting;
+    private final Map<String, GameState> gameIdToGameState = new HashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -38,7 +39,8 @@ public class MyHandler extends TextWebSocketHandler {
         String p2Id = p2.getId();
 
         String gameId = setGameId(p1Id, p2Id);
-
+        GameState newGame = new GameState(p1, p2);
+        gameIdToGameState.put(gameId, newGame);
 
     }
 
@@ -79,8 +81,12 @@ public class MyHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         // Do something with the message, like updating the game state
 
+        String gameId = sessionToGameId.get(session.getId());
+        GameState gameState = gameIdToGameState.get(gameId);
+
         // Send a response
         try {
+            session.sendMessage(new TextMessage(gameState.incrementTurn() + ""));
             session.sendMessage(new TextMessage("In game: " + session.getId() + ", your move: " + payload + " was received!"));
         } catch (IOException e) {
             System.out.println("Message failed to send");
