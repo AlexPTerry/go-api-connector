@@ -21,6 +21,7 @@ public class MyHandler extends TextWebSocketHandler {
     private final Queue<WebSocketSession> playerQueue = new LinkedList<>();
 
     private final Map<String, String> sessionToGameId = new HashMap<>();
+    private final Map<String, WebSocketSession[]> gameIdToSession = new HashMap<>();
     private final Map<String, GameState> gameIdToGameState = new HashMap<>();
 
     @Override
@@ -30,22 +31,27 @@ public class MyHandler extends TextWebSocketHandler {
         if (playerQueue.size() > 1) {
             WebSocketSession player1 = playerQueue.remove();
             WebSocketSession player2 = playerQueue.remove();
+            try {
+                player1.sendMessage(new TextMessage("Found game!"));
+                player2.sendMessage(new TextMessage("Found game!"));
+            } catch (IOException e) {
+                System.out.println("Message failed to send");
+            }
             startGame(player1, player2);
         }
     }
 
     private void startGame(WebSocketSession p1, WebSocketSession p2) {
-        String p1Id = p1.getId();
-        String p2Id = p2.getId();
-
-        String gameId = setGameId(p1Id, p2Id);
-        GameState newGame = new GameState(p1, p2);
+        String gameId = setGameId(p1, p2);
+        GameState newGame = new GameState();
         gameIdToGameState.put(gameId, newGame);
 
     }
 
-    private String setGameId(String p1Id, String p2Id) {
+    private String setGameId(WebSocketSession p1, WebSocketSession p2) {
         String gameId;
+        String p1Id = p1.getId();
+        String p2Id = p2.getId();
         if (p1Id.compareTo(p2Id) < 0) {
             gameId = p1Id + p2Id;
         } else {
@@ -54,6 +60,7 @@ public class MyHandler extends TextWebSocketHandler {
 
         sessionToGameId.put(p1Id, gameId);
         sessionToGameId.put(p2Id, gameId);
+        gameIdToSession.put(gameId, new WebSocketSession[] {p1, p2});
 
         return gameId;
     }
@@ -78,16 +85,24 @@ public class MyHandler extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
         // Extract data from the received message
-        String payload = message.getPayload();
-        // Do something with the message, like updating the game state
+        String[] payload = message.getPayload().split("\\.");
+        if (payload.length != 3) {
+            return;
+        }
 
         String gameId = sessionToGameId.get(session.getId());
         GameState gameState = gameIdToGameState.get(gameId);
+        gameState.playMove(payload[0], Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
+
+        String json = gameState.toJson();
 
         // Send a response
         try {
-            session.sendMessage(new TextMessage(gameState.incrementTurn() + ""));
-            session.sendMessage(new TextMessage("In game: " + session.getId() + ", your move: " + payload + " was received!"));
+            for (WebSocketSession s: gameIdToSession.get(gameId)) {
+                System.out.println(s.getId());
+                s.sendMessage(new TextMessage(json));
+                s.sendMessage(new TextMessage("In game: " + session.getId() + ", your move: " + "payload" + " was received!"));
+            }
         } catch (IOException e) {
             System.out.println("Message failed to send");
         }
